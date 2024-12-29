@@ -27,10 +27,10 @@ func New(interval time.Duration, fetcher *fetcher.Fetcher, publisher *publisher.
 func (r *Runner) Run() {
 	ticker := time.NewTicker(r.interval)
 	go func() {
-        runImmediately := true // TODO: put in config
-        if runImmediately {
-            r.run()
-        }
+		runImmediately := true // TODO: put in config
+		if runImmediately {
+			r.run()
+		}
 
 		for {
 			select {
@@ -45,14 +45,14 @@ func (r *Runner) Run() {
 }
 
 func (r *Runner) Wait() {
-    <-r.stopChannel
+	<-r.stopChannel
 }
 
 func (r *Runner) Stop() {
 	go func() {
 		r.stopChannel <- true
 		close(r.stopChannel)
-        r.publisher.Close()
+		r.publisher.Close()
 	}()
 }
 
@@ -65,11 +65,11 @@ func (r *Runner) run() {
 
 	schedule, err := parser.Parse(webPage)
 	if err != nil {
-        fmt.Printf("error parsing: %q", err)
+		fmt.Printf("error parsing: %q", err)
 		return
 	}
 
-    fmt.Println("publishing")
+	fmt.Println("publishing")
 	err = r.publisher.Publish(schedule)
 	if err != nil {
 	}

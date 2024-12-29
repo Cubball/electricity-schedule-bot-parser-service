@@ -55,8 +55,8 @@ func (p *Publisher) Publish(obj any) error {
 		ContentType: "application/json",
 		Body:        body,
 	})
-    // TODO: remove me
-    fmt.Printf("published: %q", string(body))
+	// TODO: remove me
+	fmt.Printf("published: %q", string(body))
 	if err != nil {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}
@@ -65,6 +65,6 @@ func (p *Publisher) Publish(obj any) error {
 }
 
 func (p *Publisher) Close() {
-    p.channel.Close()
-    p.connection.Close()
+	p.channel.Close()
+	p.connection.Close()
 }

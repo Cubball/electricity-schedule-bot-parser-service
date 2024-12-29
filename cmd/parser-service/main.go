@@ -19,12 +19,12 @@ func main() {
 		ExchangeName: "schedule.topic",
 		RoutingKey:   "schedule.parsed",
 	})
-    if err != nil {
-        fmt.Printf("failed to init publisher: %q", err)
-        return
-    }
+	if err != nil {
+		fmt.Printf("failed to init publisher: %q", err)
+		return
+	}
 
-    runner := runner.New(time.Hour, fetcher, publisher)
-    runner.Run()
-    runner.Wait()
+	runner := runner.New(time.Hour, fetcher, publisher)
+	runner.Run()
+	runner.Wait()
 }
