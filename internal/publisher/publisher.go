@@ -21,7 +21,7 @@ type Publisher struct {
 }
 
 // TODO: retry logic
-func New(config PublisherConfig) (*Publisher, error) {
+func New(config *PublisherConfig) (*Publisher, error) {
 	connection, err := amqp.Dial(config.RabbitMQUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to rmq: %w", err)
@@ -55,6 +55,8 @@ func (p *Publisher) Publish(obj any) error {
 		ContentType: "application/json",
 		Body:        body,
 	})
+    // TODO: remove me
+    fmt.Printf("published: %q", string(body))
 	if err != nil {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}

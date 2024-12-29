@@ -2,28 +2,29 @@ package main
 
 import (
 	"electricity-schedule-bot/parser-service/internal/fetcher"
-	"electricity-schedule-bot/parser-service/internal/parser"
+	"electricity-schedule-bot/parser-service/internal/publisher"
+	"electricity-schedule-bot/parser-service/internal/runner"
 	"fmt"
+	"time"
 )
 
 const webPageUrl string = "https://www.roe.vsei.ua/disconnections"
+const rabbitMqUrl string = "amqp://guest:guest@localhost:5672"
 
 // const webPageUrl string = "https://google.com"
-
-// TODO: config
 func main() {
-    fetcher := fetcher.New(webPageUrl)
-    webPage, err := fetcher.Fetch()
+	fetcher := fetcher.New(webPageUrl)
+	publisher, err := publisher.New(&publisher.PublisherConfig{
+		RabbitMQUrl:  rabbitMqUrl,
+		ExchangeName: "schedule.topic",
+		RoutingKey:   "schedule.parsed",
+	})
     if err != nil {
-        fmt.Printf("err: %q", err)
-        return;
+        fmt.Printf("failed to init publisher: %q", err)
+        return
     }
 
-    schedule, err := parser.Parse(webPage)
-    if err != nil {
-        fmt.Printf("err: %q", err)
-        return;
-    }
-
-    fmt.Printf("date: %q, len: %d", schedule.FetchTime, len(schedule.Entries))
+    runner := runner.New(time.Hour, fetcher, publisher)
+    runner.Run()
+    runner.Wait()
 }

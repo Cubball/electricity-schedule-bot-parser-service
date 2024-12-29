@@ -1,10 +1,8 @@
 package models
 
-import "time"
-
 type ScheduleEntry struct {
-    QueueNumber string    `json:"queueNumber"`
-    Date        time.Time `json:"date"`
-    StartTime   time.Time `json:"startTime"`
-    EndTime     time.Time `json:"endTime"`
+	QueueNumber string   `json:"queueNumber"`
+	Date        DateOnly `json:"date"`
+	StartTime   TimeOnly `json:"startTime"`
+	EndTime     TimeOnly `json:"endTime"`
 }

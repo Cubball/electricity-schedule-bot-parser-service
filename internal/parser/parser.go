@@ -15,7 +15,7 @@ import (
 const (
 	Digits     = "0123456789"
 	DateLayout = "02.01.2006"
-	TimeLayout = "03:04"
+	TimeLayout = "15:04"
 )
 
 var QueueNumbers = []string{
@@ -48,18 +48,18 @@ func Parse(webPage *goquery.Document) (*models.Schedule, error) {
 			break
 		}
 
-        trEntries, err := parseTr(tdElems)
-        if err != nil {
-            return nil, err
-        }
+		trEntries, err := parseTr(tdElems)
+		if err != nil {
+			return nil, err
+		}
 
-        scheduleEntries = append(scheduleEntries, trEntries...)
+		scheduleEntries = append(scheduleEntries, trEntries...)
 	}
 
-    return &models.Schedule{
-        Entries: scheduleEntries,
-        FetchTime: time.Now(),
-    }, nil
+	return &models.Schedule{
+		Entries:   scheduleEntries,
+		FetchTime: time.Now().UTC(), // TODO: inject time provider?
+	}, nil
 }
 
 func trHasScheduleEntries(tdElems []*html.Node) bool {
@@ -85,15 +85,15 @@ func parseTr(tdElems []*html.Node) ([]models.ScheduleEntry, error) {
 		}
 
 		text := getTextFromTd(tdElem)
-        tdEntries, err := parseTdText(date, QueueNumbers[idx], text)
-        if err != nil {
-            return nil, err
-        }
+		tdEntries, err := parseTdText(date, QueueNumbers[idx], text)
+		if err != nil {
+			return nil, err
+		}
 
 		scheduleEntries = append(scheduleEntries, tdEntries...)
 	}
 
-    return scheduleEntries, nil
+	return scheduleEntries, nil
 }
 
 func getTextFromTd(tdElem *html.Node) string {
@@ -110,11 +110,11 @@ func parseTdText(date time.Time, queueNumber, text string) ([]models.ScheduleEnt
 	timePeriods := strings.Split(text, "\n")
 	scheduleEntries := []models.ScheduleEntry{}
 	for _, timePeriod := range timePeriods {
-        if !strings.ContainsAny(timePeriod, Digits) {
-            // TODO: remove me
-            fmt.Printf("skipping: %s, %s, %s\n", date, queueNumber, timePeriod)
-            continue
-        }
+		if !strings.ContainsAny(timePeriod, Digits) {
+			// TODO: remove me
+			fmt.Printf("skipping: %s, %s, %s\n", date, queueNumber, timePeriod)
+			continue
+		}
 
 		parts := strings.Split(timePeriod, "-")
 		if len(parts) != 2 {
@@ -122,21 +122,21 @@ func parseTdText(date time.Time, queueNumber, text string) ([]models.ScheduleEnt
 		}
 
 		start, err := time.Parse(TimeLayout, strings.TrimSpace(parts[0]))
-        if err != nil {
-            return nil, fmt.Errorf("failed to parse the start time of the time period: %q. %w", parts[0], err)
-        }
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse the start time of the time period: %q. %w", parts[0], err)
+		}
 
 		end, err := time.Parse(TimeLayout, strings.TrimSpace(parts[1]))
-        if err != nil {
-            return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
-        }
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
+		}
 
-        scheduleEntries = append(scheduleEntries, models.ScheduleEntry{
-            QueueNumber: queueNumber,
-            Date: date,
-            StartTime: start,
-            EndTime: end,
-        })
+		scheduleEntries = append(scheduleEntries, models.ScheduleEntry{
+			QueueNumber: queueNumber,
+			Date:        models.DateOnly(date),
+			StartTime:   models.TimeOnly(start),
+			EndTime:     models.TimeOnly(end),
+		})
 	}
 
 	return scheduleEntries, nil
