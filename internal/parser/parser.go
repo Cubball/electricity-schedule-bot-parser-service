@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	Digits     = "0123456789"
-	DateLayout = "02.01.2006"
-	TimeLayout = "15:04"
+	digits     = "0123456789"
+	dateLayout = "02.01.2006"
+	timeLayout = "15:04"
 )
 
 var QueueNumbers = []string{
@@ -68,12 +68,12 @@ func trHasScheduleEntries(tdElems []*html.Node) bool {
 	}
 
 	firstChildContent := goquery.NewDocumentFromNode(tdElems[0])
-	return strings.ContainsAny(firstChildContent.Text(), Digits)
+	return strings.ContainsAny(firstChildContent.Text(), digits)
 }
 
 func parseTr(tdElems []*html.Node) ([]models.ScheduleEntry, error) {
 	firstChildContent := goquery.NewDocumentFromNode(tdElems[0])
-	date, err := time.Parse(DateLayout, firstChildContent.Text())
+	date, err := time.Parse(dateLayout, firstChildContent.Text())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the date for `tr`: %w", err)
 	}
@@ -110,7 +110,7 @@ func parseTdText(date time.Time, queueNumber, text string) ([]models.ScheduleEnt
 	timePeriods := strings.Split(text, "\n")
 	scheduleEntries := []models.ScheduleEntry{}
 	for _, timePeriod := range timePeriods {
-		if !strings.ContainsAny(timePeriod, Digits) {
+		if !strings.ContainsAny(timePeriod, digits) {
 			// TODO: remove me
 			fmt.Printf("skipping: %s, %s, %s\n", date, queueNumber, timePeriod)
 			continue
@@ -121,12 +121,12 @@ func parseTdText(date time.Time, queueNumber, text string) ([]models.ScheduleEnt
 			return nil, fmt.Errorf("unexpected number of parts in the time period %q, expected 2, got %d", timePeriod, len(parts))
 		}
 
-		start, err := time.Parse(TimeLayout, strings.TrimSpace(parts[0]))
+		start, err := time.Parse(timeLayout, strings.TrimSpace(parts[0]))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse the start time of the time period: %q. %w", parts[0], err)
 		}
 
-		end, err := time.Parse(TimeLayout, strings.TrimSpace(parts[1]))
+		end, err := time.Parse(timeLayout, strings.TrimSpace(parts[1]))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
 		}

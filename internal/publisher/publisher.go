@@ -21,7 +21,7 @@ type Publisher struct {
 }
 
 // TODO: retry logic
-func New(config *PublisherConfig) (*Publisher, error) {
+func New(config PublisherConfig) (*Publisher, error) {
 	connection, err := amqp.Dial(config.RabbitMQUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to rmq: %w", err)

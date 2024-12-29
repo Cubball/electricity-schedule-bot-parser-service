@@ -8,14 +8,20 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+const defaultTimeoutInSeconds = 10
+
 type Fetcher struct {
 	url        string
 	httpClient *http.Client
 }
 
-func New(url string) *Fetcher {
-	return &Fetcher{url: url, httpClient: &http.Client{
-		Timeout: time.Second * 10,
+type FetcherConfig struct {
+	Url string
+}
+
+func New(config FetcherConfig) *Fetcher {
+	return &Fetcher{url: config.Url, httpClient: &http.Client{
+		Timeout: time.Second * defaultTimeoutInSeconds,
 	}}
 }
 

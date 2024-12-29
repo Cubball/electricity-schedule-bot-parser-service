@@ -9,26 +9,34 @@ import (
 )
 
 type Runner struct {
-	interval    time.Duration
-	fetcher     *fetcher.Fetcher
-	publisher   *publisher.Publisher
-	stopChannel chan bool
+	fetchInterval  time.Duration
+	fetcher        *fetcher.Fetcher
+	publisher      *publisher.Publisher
+	stopChannel    chan bool
+	runImmediately bool
 }
 
-func New(interval time.Duration, fetcher *fetcher.Fetcher, publisher *publisher.Publisher) *Runner {
+type RunnerConfig struct {
+	FetchInterval  time.Duration
+	Fetcher        *fetcher.Fetcher
+	Publisher      *publisher.Publisher
+	RunImmediately bool
+}
+
+func New(config RunnerConfig) *Runner {
 	return &Runner{
-		interval:    interval,
-		fetcher:     fetcher,
-		publisher:   publisher,
-		stopChannel: make(chan bool),
+		fetchInterval:  config.FetchInterval,
+		fetcher:        config.Fetcher,
+		publisher:      config.Publisher,
+		runImmediately: config.RunImmediately,
+		stopChannel:    make(chan bool),
 	}
 }
 
 func (r *Runner) Run() {
-	ticker := time.NewTicker(r.interval)
+	ticker := time.NewTicker(r.fetchInterval)
 	go func() {
-		runImmediately := true // TODO: put in config
-		if runImmediately {
+		if r.runImmediately {
 			r.run()
 		}
 
