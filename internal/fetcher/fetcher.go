@@ -8,7 +8,11 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-const defaultTimeoutInSeconds = 10
+const (
+	defaultTimeoutInSeconds = 10
+	maxAttempts             = 5
+	initialWaitDuration     = time.Second
+)
 
 type Fetcher struct {
 	url        string
@@ -25,11 +29,10 @@ func New(config FetcherConfig) *Fetcher {
 	}}
 }
 
-// TODO: retry logic
 func (f *Fetcher) Fetch() (*goquery.Document, error) {
-	resp, err := f.httpClient.Get(f.url)
+	resp, err := f.fetch()
 	if err != nil {
-		return nil, fmt.Errorf("error fetching the web page: %w", err)
+		return nil, err
 	}
 
 	defer resp.Body.Close()
@@ -39,4 +42,19 @@ func (f *Fetcher) Fetch() (*goquery.Document, error) {
 	}
 
 	return webPage, nil
+}
+
+func (f *Fetcher) fetch() (*http.Response, error) {
+	waitDuration := initialWaitDuration
+	for i := 0; i < maxAttempts; i++ {
+		resp, err := f.httpClient.Get(f.url)
+		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			return resp, nil
+		}
+
+		time.Sleep(waitDuration)
+		waitDuration *= 2
+	}
+
+	return nil, fmt.Errorf("failed to fetch the web page after %d attempts", maxAttempts)
 }
