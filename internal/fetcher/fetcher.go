@@ -32,27 +32,27 @@ func New(config FetcherConfig) *Fetcher {
 }
 
 func (f *Fetcher) Fetch(ctx context.Context) (*goquery.Document, error) {
-    slog.DebugContext(ctx, "starting to fetch the web page")
+	slog.DebugContext(ctx, "starting to fetch the web page")
 	resp, err := f.fetch(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	defer resp.Body.Close()
-    slog.DebugContext(ctx, "fetched the web page")
+	slog.DebugContext(ctx, "fetched the web page")
 	webPage, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading the response: %w", err)
 	}
 
-    slog.DebugContext(ctx, "read the web page as html")
+	slog.DebugContext(ctx, "read the web page as html")
 	return webPage, nil
 }
 
 func (f *Fetcher) fetch(ctx context.Context) (*http.Response, error) {
 	waitDuration := initialWaitDuration
 	for i := 0; i < maxAttempts; i++ {
-        slog.DebugContext(ctx, "attempting to fetch the web page", "attempt", i+1)
+		slog.DebugContext(ctx, "attempting to fetch the web page", "attempt", i+1)
 		resp, err := f.httpClient.Get(f.url)
 		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil

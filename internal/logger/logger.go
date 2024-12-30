@@ -26,14 +26,14 @@ func (h TraceIdHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h TraceIdHandler) WithGroup(name string) slog.Handler {
-    return NewTraceIdHandler(h.wrappedHandler.WithGroup(name))
+	return NewTraceIdHandler(h.wrappedHandler.WithGroup(name))
 }
 
 func (h TraceIdHandler) Handle(ctx context.Context, record slog.Record) error {
-    traceId, ok := ctx.Value(TraceIdContextKey).(string)
-    if ok {
-        record.Add(TraceIdContextKey, traceId)
-    }
+	traceId, ok := ctx.Value(TraceIdContextKey).(string)
+	if ok {
+		record.Add(TraceIdContextKey, traceId)
+	}
 
-    return h.wrappedHandler.Handle(ctx, record)
+	return h.wrappedHandler.Handle(ctx, record)
 }

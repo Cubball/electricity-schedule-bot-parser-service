@@ -38,11 +38,11 @@ func New(config RunnerConfig) *Runner {
 }
 
 func (r *Runner) Run() {
-    slog.Info("the runner has started")
+	slog.Info("the runner has started")
 	ticker := time.NewTicker(r.fetchInterval)
 	go func() {
 		if r.runImmediately {
-            slog.Info("executing the first run immediately")
+			slog.Info("executing the first run immediately")
 			r.run()
 		}
 
@@ -50,7 +50,7 @@ func (r *Runner) Run() {
 			select {
 			case <-r.stopChannel:
 				ticker.Stop()
-                slog.Info("the runner has stopped")
+				slog.Info("the runner has stopped")
 				break
 			case <-ticker.C:
 				r.run()
@@ -72,24 +72,24 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) run() {
-    ctx := context.WithValue(context.Background(), logger.TraceIdContextKey, uuid.NewString())
-    slog.InfoContext(ctx, "executing the run")
+	ctx := context.WithValue(context.Background(), logger.TraceIdContextKey, uuid.NewString())
+	slog.InfoContext(ctx, "executing the run")
 	webPage, err := r.fetcher.Fetch(ctx)
 	if err != nil {
-        slog.ErrorContext(ctx, "error while fetching", "err", err)
+		slog.ErrorContext(ctx, "error while fetching", "err", err)
 		return
 	}
 
 	schedule, err := parser.Parse(ctx, webPage)
 	if err != nil {
-        slog.ErrorContext(ctx, "error while parsing", "err", err)
+		slog.ErrorContext(ctx, "error while parsing", "err", err)
 		return
 	}
 
 	err = r.publisher.Publish(ctx, schedule)
 	if err != nil {
-        slog.ErrorContext(ctx, "error while publishing", "err", err)
+		slog.ErrorContext(ctx, "error while publishing", "err", err)
 	}
 
-    slog.Info("the run has finished")
+	slog.Info("the run has finished")
 }

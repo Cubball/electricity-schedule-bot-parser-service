@@ -42,13 +42,13 @@ func Parse(ctx context.Context, webPage *goquery.Document) (*models.Schedule, er
 		return nil, errors.New("no `tr` elements were found on the web page")
 	}
 
-    slog.DebugContext(ctx, "found tr elements on the web page", "trElemsCount", len(trElems))
+	slog.DebugContext(ctx, "found tr elements on the web page", "trElemsCount", len(trElems))
 	scheduleEntries := []models.ScheduleEntry{}
 	slices.Reverse(trElems)
 	for _, trElem := range trElems {
 		tdElems := slices.Collect(trElem.ChildNodes())
 		if !trHasScheduleEntries(tdElems) {
-            slog.DebugContext(ctx, "found the first tr to not contain schedule entries, breaking")
+			slog.DebugContext(ctx, "found the first tr to not contain schedule entries, breaking")
 			break
 		}
 
@@ -76,14 +76,14 @@ func trHasScheduleEntries(tdElems []*html.Node) bool {
 }
 
 func parseTr(ctx context.Context, tdElems []*html.Node) ([]models.ScheduleEntry, error) {
-    slog.DebugContext(ctx, "parsing tr", "tdElemsCount", len(tdElems))
+	slog.DebugContext(ctx, "parsing tr", "tdElemsCount", len(tdElems))
 	firstChildContent := goquery.NewDocumentFromNode(tdElems[0])
 	date, err := time.Parse(dateLayout, firstChildContent.Text())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the date for `tr`: %w", err)
 	}
 
-    slog.DebugContext(ctx, "parsed the date in a tr", "date", date.Format(models.DateOnlyLayout))
+	slog.DebugContext(ctx, "parsed the date in a tr", "date", date.Format(models.DateOnlyLayout))
 	scheduleEntries := []models.ScheduleEntry{}
 	for idx, tdElem := range tdElems[1:] {
 		if idx >= len(QueueNumbers) {
@@ -91,13 +91,13 @@ func parseTr(ctx context.Context, tdElems []*html.Node) ([]models.ScheduleEntry,
 		}
 
 		text := getTextFromTd(tdElem)
-        slog.DebugContext(ctx, "parsing the content of a td", "content", text)
+		slog.DebugContext(ctx, "parsing the content of a td", "content", text)
 		tdEntries, err := parseTdText(ctx, date, QueueNumbers[idx], text)
 		if err != nil {
 			return nil, err
 		}
 
-        slog.DebugContext(ctx, "parsed schedule entries from a td", "scheduleEntriesCount", len(tdEntries))
+		slog.DebugContext(ctx, "parsed schedule entries from a td", "scheduleEntriesCount", len(tdEntries))
 		scheduleEntries = append(scheduleEntries, tdEntries...)
 	}
 
@@ -116,11 +116,11 @@ func getTextFromTd(tdElem *html.Node) string {
 
 func parseTdText(ctx context.Context, date time.Time, queueNumber, text string) ([]models.ScheduleEntry, error) {
 	timePeriods := strings.Split(text, "\n")
-    slog.DebugContext(ctx, "split up time periods in the td text", "timePeriodsCount", len(timePeriods))
+	slog.DebugContext(ctx, "split up time periods in the td text", "timePeriodsCount", len(timePeriods))
 	scheduleEntries := []models.ScheduleEntry{}
 	for _, timePeriod := range timePeriods {
 		if !strings.ContainsAny(timePeriod, digits) {
-            slog.DebugContext(ctx, "time period does not contain digits, skipping", "content", timePeriod)
+			slog.DebugContext(ctx, "time period does not contain digits, skipping", "content", timePeriod)
 			continue
 		}
 
@@ -139,7 +139,7 @@ func parseTdText(ctx context.Context, date time.Time, queueNumber, text string) 
 			return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
 		}
 
-        slog.DebugContext(ctx, "parsed the time period", "startTime", start.Format(models.TimeOnlyLayout), "endTime", end.Format(models.TimeOnlyLayout))
+		slog.DebugContext(ctx, "parsed the time period", "startTime", start.Format(models.TimeOnlyLayout), "endTime", end.Format(models.TimeOnlyLayout))
 		scheduleEntries = append(scheduleEntries, models.ScheduleEntry{
 			QueueNumber: queueNumber,
 			Date:        models.DateOnly(date),

@@ -63,7 +63,7 @@ func (p *Publisher) Publish(ctx context.Context, obj any) error {
 	headers := amqp.Table{
 		traceIdHeaderName: traceId,
 	}
-    slog.DebugContext(ctx, "will publish a message to rmq", "content", string(body))
+	slog.DebugContext(ctx, "will publish a message to rmq", "content", string(body))
 	err = p.channel.Publish(p.exchangeName, p.routingKey, false, false, amqp.Publishing{
 		ContentType: contentType,
 		Body:        body,
@@ -73,7 +73,7 @@ func (p *Publisher) Publish(ctx context.Context, obj any) error {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 
-    slog.DebugContext(ctx, "published a message to rmq")
+	slog.DebugContext(ctx, "published a message to rmq")
 	return nil
 }
 
@@ -101,7 +101,7 @@ func (p *Publisher) connect() error {
 	}
 
 	p.closeChannel = connection.NotifyClose(make(chan *amqp.Error))
-    slog.Info("connected to rmq")
+	slog.Info("connected to rmq")
 	return nil
 }
 
@@ -113,9 +113,9 @@ func (p *Publisher) handleReconnect() {
 				break
 			}
 
-            slog.Warn("disconnected from rmq")
+			slog.Warn("disconnected from rmq")
 			for {
-                slog.Info("trying to reconnect to rmq")
+				slog.Info("trying to reconnect to rmq")
 				err := p.connect()
 				if err == nil {
 					break
