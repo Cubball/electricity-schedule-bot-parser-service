@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -28,6 +29,11 @@ type FetcherConfig struct {
 func New(config FetcherConfig) *Fetcher {
 	return &Fetcher{url: config.Url, httpClient: &http.Client{
 		Timeout: time.Second * timeoutInSeconds,
+        Transport: &http.Transport{
+            TLSClientConfig: &tls.Config{
+                InsecureSkipVerify: true,
+            },
+        },
 	}}
 }
 
