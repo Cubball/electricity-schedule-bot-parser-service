@@ -91,5 +91,5 @@ func (r *Runner) run() {
 		slog.ErrorContext(ctx, "error while publishing", "err", err)
 	}
 
-	slog.Info("the run has finished")
+	slog.InfoContext(ctx, "the run has finished")
 }
