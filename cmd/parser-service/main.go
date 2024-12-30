@@ -3,6 +3,7 @@ package main
 import (
 	"electricity-schedule-bot/parser-service/internal/config"
 	"electricity-schedule-bot/parser-service/internal/fetcher"
+	"electricity-schedule-bot/parser-service/internal/logger"
 	"electricity-schedule-bot/parser-service/internal/publisher"
 	"electricity-schedule-bot/parser-service/internal/runner"
 	"log/slog"
@@ -11,7 +12,10 @@ import (
 
 func main() {
 	// TODO: might make the handler configurable
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+    handler := logger.NewTraceIdHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelDebug,
+    }))
+	logger := slog.New(handler)
 	logger = logger.With("service", "parser-service")
 	slog.SetDefault(logger)
 

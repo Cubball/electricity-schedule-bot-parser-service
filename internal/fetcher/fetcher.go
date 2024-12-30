@@ -52,7 +52,7 @@ func (f *Fetcher) Fetch(ctx context.Context) (*goquery.Document, error) {
 func (f *Fetcher) fetch(ctx context.Context) (*http.Response, error) {
 	waitDuration := initialWaitDuration
 	for i := 0; i < maxAttempts; i++ {
-        slog.DebugContext(ctx, "fetching the web page", "attempt", i+1)
+        slog.DebugContext(ctx, "attempting to fetch the web page", "attempt", i+1)
 		resp, err := f.httpClient.Get(f.url)
 		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil

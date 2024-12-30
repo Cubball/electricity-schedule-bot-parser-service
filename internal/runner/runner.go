@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"electricity-schedule-bot/parser-service/internal/fetcher"
+	"electricity-schedule-bot/parser-service/internal/logger"
 	"electricity-schedule-bot/parser-service/internal/parser"
 	"electricity-schedule-bot/parser-service/internal/publisher"
 	"log/slog"
@@ -71,8 +72,7 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) run() {
-    // TODO: extract the key?
-    ctx := context.WithValue(context.Background(), "traceId", uuid.NewString())
+    ctx := context.WithValue(context.Background(), logger.TraceIdContextKey, uuid.NewString())
     slog.InfoContext(ctx, "executing the run")
 	webPage, err := r.fetcher.Fetch(ctx)
 	if err != nil {

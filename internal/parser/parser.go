@@ -83,7 +83,7 @@ func parseTr(ctx context.Context, tdElems []*html.Node) ([]models.ScheduleEntry,
 		return nil, fmt.Errorf("failed to parse the date for `tr`: %w", err)
 	}
 
-    slog.DebugContext(ctx, "parsed the date in a tr", "date", date)
+    slog.DebugContext(ctx, "parsed the date in a tr", "date", date.Format(models.DateOnlyLayout))
 	scheduleEntries := []models.ScheduleEntry{}
 	for idx, tdElem := range tdElems[1:] {
 		if idx >= len(QueueNumbers) {
@@ -139,7 +139,7 @@ func parseTdText(ctx context.Context, date time.Time, queueNumber, text string) 
 			return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
 		}
 
-        slog.DebugContext(ctx, "parsed the time period", "startTime", start, "endTime", end)
+        slog.DebugContext(ctx, "parsed the time period", "startTime", start.Format(models.TimeOnlyLayout), "endTime", end.Format(models.TimeOnlyLayout))
 		scheduleEntries = append(scheduleEntries, models.ScheduleEntry{
 			QueueNumber: queueNumber,
 			Date:        models.DateOnly(date),

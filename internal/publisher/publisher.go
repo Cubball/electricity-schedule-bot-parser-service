@@ -2,6 +2,7 @@ package publisher
 
 import (
 	"context"
+	"electricity-schedule-bot/parser-service/internal/logger"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -53,16 +54,16 @@ func (p *Publisher) Publish(ctx context.Context, obj any) error {
 		return fmt.Errorf("failed to marshal an object to json: %w", err)
 	}
 
-	traceId, ok := ctx.Value("traceId").(string)
+	traceId, ok := ctx.Value(logger.TraceIdContextKey).(string)
 	if !ok {
 		traceId = uuid.NewString()
-		slog.WarnContext(ctx, "failed to get the `traceId` from the context, generating a new one", "traceId", traceId)
+		slog.WarnContext(ctx, "failed to get the trace id from the context, generating a new one", "traceId", traceId)
 	}
 
 	headers := amqp.Table{
 		traceIdHeaderName: traceId,
 	}
-    slog.DebugContext(ctx, "will publish a message to rmq", "content", body)
+    slog.DebugContext(ctx, "will publish a message to rmq", "content", string(body))
 	err = p.channel.Publish(p.exchangeName, p.routingKey, false, false, amqp.Publishing{
 		ContentType: contentType,
 		Body:        body,
