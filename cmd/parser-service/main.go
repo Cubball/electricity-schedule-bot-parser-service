@@ -11,19 +11,24 @@ import (
 )
 
 func main() {
-	// TODO: might make the handler configurable
-    handler := logger.NewTraceIdHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-        Level: slog.LevelDebug,
-    }))
-	logger := slog.New(handler)
-	logger = logger.With("service", "parser-service")
-	slog.SetDefault(logger)
-
 	config, err := config.Load()
 	if err != nil {
 		slog.Error("failed to load config", "err", err)
 		return
 	}
+
+	var handler slog.Handler
+	if config.IsProduction {
+		handler = logger.NewTraceIdHandler(slog.NewJSONHandler(os.Stdout, nil))
+	} else {
+		handler = logger.NewTraceIdHandler(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	}
+
+	logger := slog.New(handler)
+	logger = logger.With("service", "parser-service")
+	slog.SetDefault(logger)
 
 	fetcher := fetcher.New(fetcher.FetcherConfig{
 		Url: config.WebPageUrl,

@@ -14,9 +14,11 @@ const (
 	defaultExchangeName           = "schedule.topic"
 	defaultRoutingKey             = "schedule.parsed"
 	defaultRunImmediately         = "true"
+	defaultIsProduction           = "false"
 )
 
 type Config struct {
+	IsProduction   bool
 	WebPageUrl     string
 	RabbitMqUrl    string
 	RoutingKey     string
@@ -42,7 +44,14 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to parse `RUN_IMMEDIATELY`: %w", err)
 	}
 
+	isProductionStr := getEnvOrDefault("IS_PRODUCTION", defaultIsProduction)
+	isProduction, err := strconv.ParseBool(isProductionStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse `IS_PRODUCTION`: %w", err)
+	}
+
 	return &Config{
+		IsProduction:   isProduction,
 		WebPageUrl:     getEnvOrDefault("WEB_PAGE_URL", defaultWebPageUrl),
 		RabbitMqUrl:    getEnvOrDefault("RABBITMQ_URL", defaultRabbitMqUrl),
 		RoutingKey:     getEnvOrDefault("ROUTING_KEY", defaultRoutingKey),
