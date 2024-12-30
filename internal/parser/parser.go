@@ -111,8 +111,6 @@ func parseTdText(date time.Time, queueNumber, text string) ([]models.ScheduleEnt
 	scheduleEntries := []models.ScheduleEntry{}
 	for _, timePeriod := range timePeriods {
 		if !strings.ContainsAny(timePeriod, digits) {
-			// TODO: remove me
-			fmt.Printf("skipping: %s, %s, %s\n", date, queueNumber, timePeriod)
 			continue
 		}
 

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultTimeoutInSeconds = 10
+	timeoutInSeconds = 10
 	maxAttempts             = 5
 	initialWaitDuration     = time.Second
 )
@@ -25,7 +25,7 @@ type FetcherConfig struct {
 
 func New(config FetcherConfig) *Fetcher {
 	return &Fetcher{url: config.Url, httpClient: &http.Client{
-		Timeout: time.Second * defaultTimeoutInSeconds,
+		Timeout: time.Second * timeoutInSeconds,
 	}}
 }
 
