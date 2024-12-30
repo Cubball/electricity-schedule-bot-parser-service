@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const traceIdHeaderName = "X-Trace-Id"
 
 type PublisherConfig struct {
 	RabbitMQUrl  string
@@ -51,9 +54,13 @@ func (p *Publisher) Publish(obj any) error {
 		return fmt.Errorf("failed to marshal an object to json: %w", err)
 	}
 
+	headers := amqp.Table{
+		traceIdHeaderName: uuid.New(),
+	}
 	err = p.channel.Publish(p.exchangeName, p.routingKey, false, false, amqp.Publishing{
 		ContentType: "application/json",
 		Body:        body,
+		Headers:     headers,
 	})
 	// TODO: remove me
 	fmt.Printf("published: %q", string(body))
