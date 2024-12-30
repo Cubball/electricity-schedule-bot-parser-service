@@ -29,11 +29,11 @@ type FetcherConfig struct {
 func New(config FetcherConfig) *Fetcher {
 	return &Fetcher{url: config.Url, httpClient: &http.Client{
 		Timeout: time.Second * timeoutInSeconds,
-        Transport: &http.Transport{
-            TLSClientConfig: &tls.Config{
-                InsecureSkipVerify: true,
-            },
-        },
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
 	}}
 }
 
@@ -65,6 +65,11 @@ func (f *Fetcher) fetch(ctx context.Context) (*http.Response, error) {
 		}
 
 		slog.WarnContext(ctx, "failed to fetch the web page", "attempt", i+1)
+		// don't sleep after the last attempt
+		if i+1 >= maxAttempts {
+			break
+		}
+
 		time.Sleep(waitDuration)
 		waitDuration *= 2
 	}
