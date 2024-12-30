@@ -1,11 +1,14 @@
 package runner
 
 import (
+	"context"
 	"electricity-schedule-bot/parser-service/internal/fetcher"
 	"electricity-schedule-bot/parser-service/internal/parser"
 	"electricity-schedule-bot/parser-service/internal/publisher"
-	"fmt"
+	"log/slog"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Runner struct {
@@ -34,9 +37,11 @@ func New(config RunnerConfig) *Runner {
 }
 
 func (r *Runner) Run() {
+    slog.Info("the runner has started")
 	ticker := time.NewTicker(r.fetchInterval)
 	go func() {
 		if r.runImmediately {
+            slog.Info("executing the first run immediately")
 			r.run()
 		}
 
@@ -44,6 +49,7 @@ func (r *Runner) Run() {
 			select {
 			case <-r.stopChannel:
 				ticker.Stop()
+                slog.Info("the runner has stopped")
 				break
 			case <-ticker.C:
 				r.run()
@@ -64,21 +70,26 @@ func (r *Runner) Stop() {
 	}()
 }
 
-// TODO: logging
 func (r *Runner) run() {
-	webPage, err := r.fetcher.Fetch()
+    // TODO: extract the key?
+    ctx := context.WithValue(context.Background(), "traceId", uuid.NewString())
+    slog.InfoContext(ctx, "executing the run")
+	webPage, err := r.fetcher.Fetch(ctx)
 	if err != nil {
+        slog.ErrorContext(ctx, "error while fetching", "err", err)
 		return
 	}
 
-	schedule, err := parser.Parse(webPage)
+	schedule, err := parser.Parse(ctx, webPage)
 	if err != nil {
-		fmt.Printf("error parsing: %q", err)
+        slog.ErrorContext(ctx, "error while parsing", "err", err)
 		return
 	}
 
-	fmt.Println("publishing")
-	err = r.publisher.Publish(schedule)
+	err = r.publisher.Publish(ctx, schedule)
 	if err != nil {
+        slog.ErrorContext(ctx, "error while publishing", "err", err)
 	}
+
+    slog.Info("the run has finished")
 }

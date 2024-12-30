@@ -5,13 +5,19 @@ import (
 	"electricity-schedule-bot/parser-service/internal/fetcher"
 	"electricity-schedule-bot/parser-service/internal/publisher"
 	"electricity-schedule-bot/parser-service/internal/runner"
-	"fmt"
+	"log/slog"
+	"os"
 )
 
 func main() {
+	// TODO: might make the handler configurable
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger = logger.With("service", "parser-service")
+	slog.SetDefault(logger)
+
 	config, err := config.Load()
 	if err != nil {
-		fmt.Printf("failed to load config: %q", err)
+		slog.Error("failed to load config", "err", err)
 		return
 	}
 
@@ -24,7 +30,7 @@ func main() {
 		RoutingKey:   config.RoutingKey,
 	})
 	if err != nil {
-		fmt.Printf("failed to init publisher: %q", err)
+		slog.Error("failed to init publisher", "err", err)
 		return
 	}
 

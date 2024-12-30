@@ -32,9 +32,9 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to parse `FETCH_INTERVAL_IN_MINUTES`: %w", err)
 	}
 
-    if fetchIntervalInMinutes <= 0 {
-        return nil, fmt.Errorf("`FETCH_INTERVAL_IN_MINUTES` should be greater than 0, got %d", fetchIntervalInMinutes)
-    }
+	if fetchIntervalInMinutes <= 0 {
+		return nil, fmt.Errorf("`FETCH_INTERVAL_IN_MINUTES` should be greater than 0, got %d", fetchIntervalInMinutes)
+	}
 
 	runImmediatelyStr := getEnvOrDefault("RUN_IMMEDIATELY", defaultRunImmediately)
 	runImmediately, err := strconv.ParseBool(runImmediatelyStr)

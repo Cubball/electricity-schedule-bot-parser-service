@@ -1,8 +1,10 @@
 package publisher
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,15 +47,22 @@ func New(config PublisherConfig) (*Publisher, error) {
 	return &publisher, nil
 }
 
-func (p *Publisher) Publish(obj any) error {
+func (p *Publisher) Publish(ctx context.Context, obj any) error {
 	body, err := json.Marshal(obj)
 	if err != nil {
 		return fmt.Errorf("failed to marshal an object to json: %w", err)
 	}
 
-	headers := amqp.Table{
-		traceIdHeaderName: uuid.New(),
+	traceId, ok := ctx.Value("traceId").(string)
+	if !ok {
+		traceId = uuid.NewString()
+		slog.WarnContext(ctx, "failed to get the `traceId` from the context, generating a new one", "traceId", traceId)
 	}
+
+	headers := amqp.Table{
+		traceIdHeaderName: traceId,
+	}
+    slog.DebugContext(ctx, "will publish a message to rmq", "content", body)
 	err = p.channel.Publish(p.exchangeName, p.routingKey, false, false, amqp.Publishing{
 		ContentType: contentType,
 		Body:        body,
@@ -63,6 +72,7 @@ func (p *Publisher) Publish(obj any) error {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 
+    slog.DebugContext(ctx, "published a message to rmq")
 	return nil
 }
 
@@ -90,6 +100,7 @@ func (p *Publisher) connect() error {
 	}
 
 	p.closeChannel = connection.NotifyClose(make(chan *amqp.Error))
+    slog.Info("connected to rmq")
 	return nil
 }
 
@@ -101,7 +112,9 @@ func (p *Publisher) handleReconnect() {
 				break
 			}
 
+            slog.Warn("disconnected from rmq")
 			for {
+                slog.Info("trying to reconnect to rmq")
 				err := p.connect()
 				if err == nil {
 					break
