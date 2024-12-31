@@ -51,6 +51,7 @@ func Parse(ctx context.Context, webPage *goquery.Document) (*models.Schedule, er
 	for _, queueNumber := range queueNumbers {
 		queues = append(queues, models.Queue{
 			Number: queueNumber,
+            DisconnectionTimes: []models.DisconnectionTime{},
 		})
 	}
 
@@ -96,7 +97,7 @@ func parseTr(ctx context.Context, tdElems []*html.Node, queues []models.Queue) e
 			return fmt.Errorf("too many `td` elements (except the first one): expected %d, got %d", len(queues), len(tdElems)-1)
 		}
 
-        queue := queues[idx]
+		queue := queues[idx]
 		text := getTextFromTd(tdElem)
 		slog.DebugContext(ctx, "parsing the content of a td", "content", text)
 		tdEntries, err := parseTdText(ctx, date, text)
@@ -105,7 +106,7 @@ func parseTr(ctx context.Context, tdElems []*html.Node, queues []models.Queue) e
 		}
 
 		slog.DebugContext(ctx, "parsed schedule entries from a td", "scheduleEntriesCount", len(tdEntries))
-        queue.DisconnectionTimes = append(queue.DisconnectionTimes, tdEntries...)
+		queue.DisconnectionTimes = append(queue.DisconnectionTimes, tdEntries...)
 	}
 
 	return nil
@@ -149,10 +150,10 @@ func parseTdText(ctx context.Context, date time.Time, text string) ([]models.Dis
 		start = time.Date(date.Year(), date.Month(), date.Day(), start.Hour(), start.Minute(), 0, 0, location).UTC()
 		end = time.Date(date.Year(), date.Month(), date.Day(), end.Hour(), end.Minute(), 0, 0, location).UTC()
 		slog.DebugContext(ctx, "parsed the time period", "startTime", start, "endTime", end)
-        disconnectionTimes = append(disconnectionTimes, models.DisconnectionTime{
-            Start: start,
-            End: end,
-        })
+		disconnectionTimes = append(disconnectionTimes, models.DisconnectionTime{
+			Start: start,
+			End:   end,
+		})
 	}
 
 	return disconnectionTimes, nil
