@@ -3,6 +3,6 @@ package models
 import "time"
 
 type Schedule struct {
-	Entries   []ScheduleEntry `json:"entries"`
-	FetchTime time.Time       `json:"fetchTime"`
+	FetchTime time.Time `json:"fetchTime"`
+	Queues    []Queue   `json:"queues"`
 }

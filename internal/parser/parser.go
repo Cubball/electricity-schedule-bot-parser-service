@@ -20,7 +20,10 @@ const (
 	timeLayout = "15:04"
 )
 
-var QueueNumbers = []string{
+// HACK: ignoring the possible error, it shouldn't
+var location, _ = time.LoadLocation("Europe/Kyiv")
+
+var queueNumbers = []string{
 	"1.1",
 	"1.2",
 	"2.1",
@@ -43,8 +46,14 @@ func Parse(ctx context.Context, webPage *goquery.Document) (*models.Schedule, er
 	}
 
 	slog.DebugContext(ctx, "found tr elements on the web page", "trElemsCount", len(trElems))
-	scheduleEntries := []models.ScheduleEntry{}
 	slices.Reverse(trElems)
+	queues := make([]models.Queue, 0, len(queueNumbers))
+	for _, queueNumber := range queueNumbers {
+		queues = append(queues, models.Queue{
+			Number: queueNumber,
+		})
+	}
+
 	for _, trElem := range trElems {
 		tdElems := slices.Collect(trElem.ChildNodes())
 		if !trHasScheduleEntries(tdElems) {
@@ -52,17 +61,15 @@ func Parse(ctx context.Context, webPage *goquery.Document) (*models.Schedule, er
 			break
 		}
 
-		trEntries, err := parseTr(ctx, tdElems)
+		err := parseTr(ctx, tdElems, queues)
 		if err != nil {
 			return nil, err
 		}
-
-		scheduleEntries = append(scheduleEntries, trEntries...)
 	}
 
 	return &models.Schedule{
-		Entries:   scheduleEntries,
 		FetchTime: time.Now().UTC(), // TODO: inject time provider?
+		Queues:    queues,
 	}, nil
 }
 
@@ -75,33 +82,33 @@ func trHasScheduleEntries(tdElems []*html.Node) bool {
 	return strings.ContainsAny(firstChildContent.Text(), digits)
 }
 
-func parseTr(ctx context.Context, tdElems []*html.Node) ([]models.ScheduleEntry, error) {
+func parseTr(ctx context.Context, tdElems []*html.Node, queues []models.Queue) error {
 	slog.DebugContext(ctx, "parsing tr", "tdElemsCount", len(tdElems))
 	firstChildContent := goquery.NewDocumentFromNode(tdElems[0])
 	date, err := time.Parse(dateLayout, firstChildContent.Text())
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse the date for `tr`: %w", err)
+		return fmt.Errorf("failed to parse the date for `tr`: %w", err)
 	}
 
-	slog.DebugContext(ctx, "parsed the date in a tr", "date", date.Format(models.DateOnlyLayout))
-	scheduleEntries := []models.ScheduleEntry{}
+	slog.DebugContext(ctx, "parsed the date in a tr", "date", date)
 	for idx, tdElem := range tdElems[1:] {
-		if idx >= len(QueueNumbers) {
-			return nil, fmt.Errorf("too many `td` elements (except the first one): expected %d, got %d", len(QueueNumbers), len(tdElems)-1)
+		if idx >= len(queues) {
+			return fmt.Errorf("too many `td` elements (except the first one): expected %d, got %d", len(queues), len(tdElems)-1)
 		}
 
+        queue := queues[idx]
 		text := getTextFromTd(tdElem)
 		slog.DebugContext(ctx, "parsing the content of a td", "content", text)
-		tdEntries, err := parseTdText(ctx, date, QueueNumbers[idx], text)
+		tdEntries, err := parseTdText(ctx, date, text)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		slog.DebugContext(ctx, "parsed schedule entries from a td", "scheduleEntriesCount", len(tdEntries))
-		scheduleEntries = append(scheduleEntries, tdEntries...)
+        queue.DisconnectionTimes = append(queue.DisconnectionTimes, tdEntries...)
 	}
 
-	return scheduleEntries, nil
+	return nil
 }
 
 func getTextFromTd(tdElem *html.Node) string {
@@ -114,10 +121,10 @@ func getTextFromTd(tdElem *html.Node) string {
 	return strings.Join(contents, "\n")
 }
 
-func parseTdText(ctx context.Context, date time.Time, queueNumber, text string) ([]models.ScheduleEntry, error) {
+func parseTdText(ctx context.Context, date time.Time, text string) ([]models.DisconnectionTime, error) {
 	timePeriods := strings.Split(text, "\n")
 	slog.DebugContext(ctx, "split up time periods in the td text", "timePeriodsCount", len(timePeriods))
-	scheduleEntries := []models.ScheduleEntry{}
+	disconnectionTimes := []models.DisconnectionTime{}
 	for _, timePeriod := range timePeriods {
 		if !strings.ContainsAny(timePeriod, digits) {
 			slog.DebugContext(ctx, "time period does not contain digits, skipping", "content", timePeriod)
@@ -139,14 +146,14 @@ func parseTdText(ctx context.Context, date time.Time, queueNumber, text string) 
 			return nil, fmt.Errorf("failed to parse the end time of the time period: %q. %w", parts[1], err)
 		}
 
-		slog.DebugContext(ctx, "parsed the time period", "startTime", start.Format(models.TimeOnlyLayout), "endTime", end.Format(models.TimeOnlyLayout))
-		scheduleEntries = append(scheduleEntries, models.ScheduleEntry{
-			QueueNumber: queueNumber,
-			Date:        models.DateOnly(date),
-			StartTime:   models.TimeOnly(start),
-			EndTime:     models.TimeOnly(end),
-		})
+		start = time.Date(date.Year(), date.Month(), date.Day(), start.Hour(), start.Minute(), 0, 0, location).UTC()
+		end = time.Date(date.Year(), date.Month(), date.Day(), end.Hour(), end.Minute(), 0, 0, location).UTC()
+		slog.DebugContext(ctx, "parsed the time period", "startTime", start, "endTime", end)
+        disconnectionTimes = append(disconnectionTimes, models.DisconnectionTime{
+            Start: start,
+            End: end,
+        })
 	}
 
-	return scheduleEntries, nil
+	return disconnectionTimes, nil
 }
