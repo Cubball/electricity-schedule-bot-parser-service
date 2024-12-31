@@ -50,8 +50,8 @@ func Parse(ctx context.Context, webPage *goquery.Document) (*models.Schedule, er
 	queues := make([]models.Queue, 0, len(queueNumbers))
 	for _, queueNumber := range queueNumbers {
 		queues = append(queues, models.Queue{
-			Number: queueNumber,
-            DisconnectionTimes: []models.DisconnectionTime{},
+			Number:             queueNumber,
+			DisconnectionTimes: []models.DisconnectionTime{},
 		})
 	}
 
